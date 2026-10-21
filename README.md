@@ -2,7 +2,15 @@
 
 Kubernetes configuration for [portfolio-web](https://github.com/vudaian24/portfolio-web), deployed by Argo CD to one Amazon EKS cluster in `ap-southeast-1`.
 
-**Status:** layout only. The directories are empty placeholders.
+**Status:** Phase 1. Charts, ApplicationSets and bootstrap manifests are written and tested on a local kind cluster. The EKS cluster does not exist yet, and `charts/portfolio-web/values-prod.yaml` has no image tag until the first image is pushed to ECR.
+
+| Chart | Upstream chart | Version |
+| --- | --- | --- |
+| `argocd` | `argo-cd` (Argo CD v3.5.5) | 10.10.5 |
+| `aws-load-balancer-controller` | `aws-load-balancer-controller` | 3.6.0 |
+| `external-secrets` | `external-secrets` | 2.13.0 |
+| `kube-prometheus-stack` | `kube-prometheus-stack` | 92.11.0 |
+| `portfolio-web` | none (app chart) | 0.1.0 |
 
 This repository holds config, not source code, following the [Argo CD best practice](https://argo-cd.readthedocs.io/en/stable/user-guide/best_practices/) of keeping manifests in their own repository. The app code and its image build live in `portfolio-web`. AWS and Cloudflare resources live in `portfolio-infra` (Terraform). Design records live in the private workspace repo.
 
@@ -31,8 +39,18 @@ charts/                     One chart per add-on, plus the app chart.
 2. Argo CD polls this repository and syncs the change.
 3. Values that come from Terraform and identify the AWS account (ECR registry host, VPC ID) are never committed. They are annotations on the `in-cluster` Argo CD cluster secret, and the ApplicationSets pass them to the charts as Helm parameters.
 
+## Check before pushing
+
+Argo CD syncs every push to `main`, and nothing reviews it first. Run the same checks as CI:
+
+```sh
+./scripts/check.sh
+```
+
+It runs `helm dependency build`, `helm lint`, and `helm template` piped into `kubeconform` (Kubernetes 1.36) for every chart, with placeholder values from `charts/<name>/ci/test-values.yaml`, then schema-checks `appsets/` and `bootstrap/`.
+
 ## Requirements
 
-- `helm` and `kubectl`
-- `kubeconform` (optional, for schema checks)
-- A local kind or k3d cluster for testing without AWS
+- `helm` 4 and `kubectl`
+- `kubeconform`
+- A local kind cluster (`kindest/node:v1.36.x`) for testing without AWS

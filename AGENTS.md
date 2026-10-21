@@ -4,7 +4,9 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 
 ## Current state
 
-- Layout only. Every directory holds a `.gitkeep` placeholder. No charts, ApplicationSets or bootstrap manifests yet.
+- Phase 1: all charts, ApplicationSets and bootstrap manifests exist and were tested on a local kind cluster (Kubernetes 1.36). No EKS cluster yet.
+- `charts/portfolio-web/values-prod.yaml` has an empty `image.tag` until the first ECR push in Phase 2; the chart refuses to render without it.
+- ApplicationSets set `preserveResourcesOnDeletion: true` and add no finalizer to Applications, so deleting a file in `appsets/` removes the Application but leaves the workload running.
 - The target design is in the parent `docs/`. Follow the parent docs when they conflict.
 
 ## Layout
@@ -26,14 +28,14 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 
 ## Commands
 
-- Render a chart: `helm dependency build charts/<name> && helm template <name> charts/<name>`
-- Lint: `helm lint charts/<name>`
-- Schema check: `helm template <name> charts/<name> | kubeconform -strict -ignore-missing-schemas`
+- Check everything (same as CI): `./scripts/check.sh`. Needs `helm` and `kubeconform`.
+- Render one chart: `helm dependency build charts/<name> && helm template <name> charts/<name> -f charts/<name>/ci/test-values.yaml`
+- Bump an upstream chart: change the version in `Chart.yaml`, run `helm dependency update charts/<name>`, commit `Chart.yaml` and `Chart.lock`.
 
 ## Never do
 
 - Never commit the AWS account ID, the ECR registry host, the VPC ID or any secret value. Secrets come from SSM Parameter Store through External Secrets.
 - Never run `kubectl apply`, `helm install` or `argocd app sync` against the EKS cluster. A local kind or k3d cluster is fine.
-- Deleting a file in `appsets/` makes Argo CD prune that add-on and its resources as soon as it is pushed. Confirm with the user first and say so in the commit message.
+- Deleting a file in `appsets/` removes that Application as soon as it is pushed. The workload keeps running unmanaged. Confirm with the user first and say so in the commit message.
 - This repo is also checked out as a submodule of the `portfolio` workspace repo. Push changes here first; the workspace records the new commit afterwards.
 - Commit on `main` and push it directly; there are no pull requests. Argo CD syncs every push, so render each changed chart with `helm template` before pushing.
