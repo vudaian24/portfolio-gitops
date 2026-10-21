@@ -34,6 +34,6 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 
 - Never commit the AWS account ID, the ECR registry host, the VPC ID or any secret value. Secrets come from SSM Parameter Store through External Secrets.
 - Never run `kubectl apply`, `helm install` or `argocd app sync` against the EKS cluster. A local kind or k3d cluster is fine.
-- Deleting a file in `appsets/` makes Argo CD prune that add-on and its resources. Call this out in the PR.
+- Deleting a file in `appsets/` makes Argo CD prune that add-on and its resources as soon as it is pushed. Confirm with the user first and say so in the commit message.
 - This repo is also checked out as a submodule of the `portfolio` workspace repo. Push changes here first; the workspace records the new commit afterwards.
-- Do not push to `main` directly. Branch from `main`, push the branch, and open a PR.
+- Commit on `main` and push it directly; there are no pull requests. Argo CD syncs every push, so render each changed chart with `helm template` before pushing.
