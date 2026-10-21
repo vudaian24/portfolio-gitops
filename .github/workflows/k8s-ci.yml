@@ -1,0 +1,43 @@
+name: K8s CI
+
+# Lints, renders and schema-checks every chart and the Argo CD manifests.
+# No cluster and no AWS credentials. Pushes go straight to main and Argo CD
+# syncs them, so this reports problems after the fact; run
+# scripts/check.sh locally before pushing.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HELM_VERSION: v4.3.0
+  KUBECONFORM_VERSION: v0.8.0
+
+jobs:
+  check:
+    name: Check charts and manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: azure/setup-helm@v5
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Install kubeconform
+        run: |
+          base="https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}"
+          curl -fsSLO "${base}/kubeconform-linux-amd64.tar.gz"
+          curl -fsSL "${base}/CHECKSUMS" | grep ' kubeconform-linux-amd64.tar.gz$' | sha256sum -c
+          tar -xzf kubeconform-linux-amd64.tar.gz kubeconform
+          sudo install kubeconform /usr/local/bin/kubeconform
+
+      - name: Check
+        run: ./scripts/check.sh
