@@ -14,6 +14,12 @@ KUBECONFORM=(kubeconform -strict -summary -output text
 
 cd "$(dirname "$0")/.."
 
+# `helm dependency build` needs every chart repository registered first.
+grep -h '^ *repository:' charts/*/Chart.yaml | awk '{print $2}' | sort -u |
+  while read -r url; do
+    helm repo add "$(echo "${url#https://}" | tr -c 'a-zA-Z0-9\n' '-')" "${url}" --force-update >/dev/null
+  done
+
 for chart in charts/*/; do
   chart="${chart%/}"
   name="$(basename "$chart")"
