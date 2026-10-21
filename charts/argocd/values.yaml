@@ -1,0 +1,75 @@
+# Lean Argo CD (ADR 0005): one replica each, no Dex, no notifications.
+# The UI is reached with `kubectl port-forward`, never exposed.
+# Requests and limits follow the node budget in docs/architecture/aws-eks.md
+# (Argo CD: about 0.35 to 0.55 GiB in total).
+argo-cd:
+  crds:
+    # Keep Application and ApplicationSet CRDs if the release is deleted,
+    # so the apps it manages are not removed with it.
+    keep: true
+
+  configs:
+    cm:
+      # Poll Git every 3 minutes. The repository is public, so no webhook.
+      timeout.reconciliation: 180s
+    params:
+      # At most two `helm template` runs at once. Rendering kube-prometheus-stack
+      # and its dependencies in parallel got the repo-server OOM-killed at 256Mi
+      # in the kind test.
+      reposerver.parallelism.limit: 2
+      # Fewer workers than the defaults (20 and 10); one cluster, six apps.
+      controller.status.processors: 5
+      controller.operation.processors: 2
+
+  controller:
+    replicas: 1
+    # Caches every resource it manages, including the large Prometheus and
+    # External Secrets CRDs. 384Mi was OOM-killed in the kind test.
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 768Mi
+
+  repoServer:
+    replicas: 1
+    # Runs helm for every render; the peak is while it builds chart dependencies.
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+  server:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 20m
+        memory: 64Mi
+      limits:
+        memory: 160Mi
+
+  applicationSet:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 10m
+        memory: 48Mi
+      limits:
+        memory: 128Mi
+
+  redis:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 64Mi
+
+  dex:
+    enabled: false
+
+  notifications:
+    enabled: false

@@ -1,0 +1,106 @@
+# Monitoring (ADR 0005): Prometheus keeps 3 days on an emptyDir, scrapes every
+# 60 s, no Alertmanager. Grafana has no volume; dashboards come from ConfigMaps.
+# Both are reached with `kubectl port-forward`.
+kube-prometheus-stack:
+  crds:
+    enabled: true
+
+  alertmanager:
+    enabled: false
+
+  # The EKS control plane is managed by AWS and not reachable for scraping.
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  # kube-proxy binds its metrics port to localhost on EKS.
+  kubeProxy:
+    enabled: false
+
+  defaultRules:
+    rules:
+      alertmanager: false
+      etcd: false
+      kubeControllerManager: false
+      kubeSchedulerAlerting: false
+      kubeSchedulerRecording: false
+      kubeProxy: false
+
+  prometheus:
+    prometheusSpec:
+      retention: 3d
+      retentionSize: 2GB
+      scrapeInterval: 60s
+      evaluationInterval: 60s
+      # Pick up ServiceMonitors and rules from every release, not only this one.
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+      # No storageSpec: data lives on an emptyDir and is lost on restart.
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+          ephemeral-storage: 1Gi
+        limits:
+          memory: 512Mi
+          ephemeral-storage: 3Gi
+
+  prometheusOperator:
+    resources:
+      requests:
+        cpu: 20m
+        memory: 48Mi
+      limits:
+        memory: 96Mi
+    prometheusConfigReloader:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          memory: 32Mi
+
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 64Mi
+
+  prometheus-node-exporter:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        memory: 48Mi
+
+  grafana:
+    # No adminPassword: the Grafana chart generates one into the Secret
+    # kube-prometheus-stack-grafana.
+    persistence:
+      enabled: false
+    defaultDashboardsEnabled: true
+    sidecar:
+      dashboards:
+        enabled: true
+      # Applies to both sidecars (dashboards and datasources). 96Mi was
+      # OOM-killed in the kind test.
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 160Mi
+    # Grafana 12 needs about 200Mi just to start; 192Mi was OOM-killed in the
+    # kind test.
+    resources:
+      requests:
+        cpu: 20m
+        memory: 192Mi
+      limits:
+        memory: 384Mi

@@ -1,0 +1,5 @@
+# Written by portfolio-web CI on every deploy. Holds only the image tag (the
+# git SHA). Empty until the first image is pushed to ECR in Phase 2; the chart
+# refuses to render without it.
+image:
+  tag: ""

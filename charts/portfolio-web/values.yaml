@@ -1,0 +1,54 @@
+# App chart for portfolio-web (ADR 0007). The image tag lives in
+# values-prod.yaml and is written only by portfolio-web CI.
+image:
+  # ECR registry host. Set by the ApplicationSet from the `portfolio/ecr-registry`
+  # annotation on the in-cluster secret, because it contains the AWS account ID.
+  # Never commit the real value.
+  registry: ""
+  repository: portfolio-prod-web
+  # Set in values-prod.yaml.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+containerPort: 3000
+
+# Requests and limits follow the node budget in docs/architecture/aws-eks.md
+# (app: about 0.15 GiB per replica). The HPA scales on the CPU request.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+autoscaling:
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+service:
+  port: 80
+
+ingress:
+  enabled: true
+  className: alb
+  # Fixed name, so Terraform can find the ALB and point the Cloudflare
+  # records at it (ADR 0004).
+  loadBalancerName: portfolio-prod-web
+  # Security group from Terraform: TCP 443 from Cloudflare IP ranges only.
+  securityGroup: portfolio-prod-web
+  # The controller finds the ACM certificate by these host names.
+  hosts:
+    - portfolio.anvd.io.vn
+    - portfolio-aws.anvd.io.vn
+  sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+
+externalSecret:
+  enabled: true
+  clusterSecretStore: aws-parameter-store
+  # Refresh from SSM every hour; restart the Deployment to pick up a change.
+  refreshInterval: 1h
+  # Kubernetes Secret key -> SSM parameter name.
+  data:
+    TELEGRAM_BOT_TOKEN: /portfolio/prod/telegram-bot-token
+    TELEGRAM_CHAT_ID: /portfolio/prod/telegram-chat-id

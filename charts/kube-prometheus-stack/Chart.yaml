@@ -1,0 +1,9 @@
+apiVersion: v2
+name: kube-prometheus-stack
+description: Prometheus, Grafana and exporters for the portfolio cluster. Wraps the upstream kube-prometheus-stack chart.
+type: application
+version: 0.1.0
+dependencies:
+  - name: kube-prometheus-stack
+    version: 92.11.0
+    repository: https://prometheus-community.github.io/helm-charts

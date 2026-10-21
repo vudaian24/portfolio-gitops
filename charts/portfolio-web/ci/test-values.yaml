@@ -1,0 +1,5 @@
+# Placeholder for local renders and CI. The real registry comes from the
+# in-cluster secret annotation `portfolio/ecr-registry`.
+image:
+  registry: 000000000000.dkr.ecr.ap-southeast-1.amazonaws.com
+  tag: 0000000000000000000000000000000000000000

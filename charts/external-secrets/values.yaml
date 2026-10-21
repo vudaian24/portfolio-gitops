@@ -1,0 +1,43 @@
+# External Secrets Operator (ADR 0005). Reads SSM Parameter Store with EKS
+# Pod Identity; Terraform grants ssm:GetParameter on /portfolio/prod/*.
+external-secrets:
+  installCRDs: true
+
+  serviceAccount:
+    create: true
+    # Must match the Pod Identity association in Terraform.
+    name: external-secrets
+
+  # Only the ClusterSecretStore and ExternalSecret kinds are used.
+  processClusterExternalSecret: false
+  processClusterPushSecret: false
+  processPushSecret: false
+  processClusterGenerator: false
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+  webhook:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 64Mi
+
+  certController:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 96Mi
+
+# Our own resources, rendered by templates/.
+clusterSecretStore:
+  name: aws-parameter-store
+  region: ap-southeast-1

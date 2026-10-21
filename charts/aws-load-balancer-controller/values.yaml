@@ -1,0 +1,34 @@
+# AWS Load Balancer Controller (ADR 0005). It creates the ALB for the
+# portfolio-web Ingress. Credentials come from EKS Pod Identity, bound to the
+# service account below by Terraform.
+aws-load-balancer-controller:
+  # One node, so one replica. Two would only compete for the same node.
+  replicaCount: 1
+
+  clusterName: portfolio-prod
+  # Pods cannot reach instance metadata (IMDSv2 hop limit 1), so region and
+  # VPC ID are set here instead of being discovered.
+  region: ap-southeast-1
+  # Set by the ApplicationSet from the `portfolio/vpc-id` annotation on the
+  # in-cluster secret. Never commit the real value.
+  vpcId: ""
+
+  serviceAccount:
+    create: true
+    # Must match the Pod Identity association in Terraform.
+    name: aws-load-balancer-controller
+
+  # Only Ingress objects use the controller. The Service webhook would block
+  # every Service create while the controller is down.
+  enableServiceMutatorWebhook: false
+
+  createIngressClassResource: true
+  ingressClass: alb
+  defaultTargetType: ip
+
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 128Mi

@@ -1,0 +1,51 @@
+# Argo CD manages itself. Release name and namespace match the bootstrap `helm install`.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            portfolio/cluster: prod
+  # Deleting this file or the generated Application leaves the workload running.
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  # Lets a runbook turn auto-sync off on the Application without this
+  # ApplicationSet turning it back on.
+  ignoreApplicationDifferences:
+    - jsonPointers:
+        - /spec/syncPolicy
+  template:
+    metadata:
+      name: argocd
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/vudaian24/portfolio-gitops.git
+        targetRevision: main
+        path: charts/argocd
+        helm:
+          releaseName: argocd
+      destination:
+        server: '{{ .server }}'
+        namespace: argocd
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          # Large CRDs (Prometheus, External Secrets) exceed the client-side
+          # annotation limit; Argo CD also needs it to take over its own install.
+          - ServerSideApply=true
+        retry:
+          limit: 10
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m

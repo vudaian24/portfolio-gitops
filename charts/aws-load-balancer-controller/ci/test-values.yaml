@@ -1,0 +1,4 @@
+# Placeholder for local renders and CI. The real value comes from the
+# in-cluster secret annotation `portfolio/vpc-id`.
+aws-load-balancer-controller:
+  vpcId: vpc-00000000000000000
