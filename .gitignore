@@ -1,0 +1,9 @@
+# Helm dependency archives, rebuilt from Chart.lock with `helm dependency build`
+charts/*/charts/
+*.tgz
+
+# OS and editors
+.DS_Store
+.vscode/
+.idea/
+*.swp
