@@ -4,7 +4,7 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 
 ## Current state
 
-- Phase 1: all charts, ApplicationSets and bootstrap manifests exist and were tested on a local kind cluster (Kubernetes 1.36). No EKS cluster yet.
+- All charts, ApplicationSets and bootstrap manifests exist and were tested on a local kind cluster (Kubernetes 1.36). The EKS cluster exists since 2026-10-22 (Phase 2); Argo CD is not bootstrapped yet.
 - `charts/portfolio-web/values-prod.yaml` has an empty `image.tag` until the `bootstrap` deploy of `portfolio-web` writes the first tag in Phase 3; the chart refuses to render without it.
 - ApplicationSets set `preserveResourcesOnDeletion: true` and add no finalizer to Applications, so deleting a file in `appsets/` removes the Application but leaves the workload running.
 - The target design is in the parent `docs/`. Follow the parent docs when they conflict.
