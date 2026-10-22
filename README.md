@@ -7,7 +7,7 @@ Kubernetes configuration for [portfolio-web](https://github.com/vudaian24/portfo
 | Chart | Upstream chart | Version |
 | --- | --- | --- |
 | `argocd` | `argo-cd` (Argo CD v3.5.5) | 10.10.5 |
-| `aws-load-balancer-controller` | `aws-load-balancer-controller` | 3.6.0 |
+| `aws-load-balancer-controller` | `aws-load-balancer-controller` | 3.6.1 |
 | `external-secrets` | `external-secrets` | 2.13.0 |
 | `kube-prometheus-stack` | `kube-prometheus-stack` | 92.11.0 |
 | `portfolio-web` | none (app chart) | 0.1.0 |
@@ -47,10 +47,10 @@ Argo CD syncs every push to `main`, and nothing reviews it first. Run the same c
 ./scripts/check.sh
 ```
 
-It runs `helm dependency build`, `helm lint`, and `helm template` piped into `kubeconform` (Kubernetes 1.36) for every chart, with placeholder values from `charts/<name>/ci/test-values.yaml`, then schema-checks `appsets/` and `bootstrap/`.
+It runs `helm dependency build`, `helm lint`, and `helm template --include-crds` piped into `kubeconform` (Kubernetes 1.36) for every chart, with placeholder values from `charts/<name>/ci/test-values.yaml`, then schema-checks `appsets/` and `bootstrap/`. Helm uses its own config and cache in a temporary directory. A resource without a schema fails the run. The only exception is the CustomResourceDefinition kind, which no schema catalog publishes, so CRD objects are skipped.
 
 ## Requirements
 
-- `helm` 4 and `kubectl`
+- `helm` 4 (v4.3.1 in CI) and `kubectl`
 - `kubeconform`
 - A local kind cluster (`kindest/node:v1.36.x`) for testing without AWS
