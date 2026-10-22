@@ -110,6 +110,14 @@ kube-prometheus-stack:
         memory: 192Mi
       limits:
         memory: 384Mi
+    # Up to 5 minutes to start before liveness applies. In the kind re-test
+    # the liveness probe restarted Grafana once during a CPU-heavy start.
+    startupProbe:
+      httpGet:
+        path: /api/health
+        port: grafana
+      periodSeconds: 10
+      failureThreshold: 30
 
 # Grafana admin Secret, built from SSM by templates/external-secret-grafana-admin.yaml.
 grafanaAdmin:
