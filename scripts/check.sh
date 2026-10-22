@@ -5,14 +5,30 @@
 set -euo pipefail
 
 KUBE_VERSION="${KUBE_VERSION:-1.36.0}"
-# Built-in kinds from the default catalog; Argo CD, External Secrets and
-# Prometheus CRDs from the datree CRDs catalog.
-KUBECONFORM=(kubeconform -strict -summary -output text
-  -kubernetes-version "${KUBECONFORM_KUBE_VERSION:-$KUBE_VERSION}"
-  -schema-location default
-  -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json')
 
 cd "$(dirname "$0")/.."
+
+# Own Helm config and cache, so `repo add` and `dependency build` never touch
+# the global Helm setup of the developer or the CI runner.
+helm_home="$(mktemp -d)"
+trap 'rm -rf "${helm_home}"' EXIT
+export HELM_REPOSITORY_CONFIG="${helm_home}/repositories.yaml"
+export HELM_REPOSITORY_CACHE="${helm_home}/cache"
+export HELM_CACHE_HOME="${helm_home}/cache"
+export HELM_CONFIG_HOME="${helm_home}/config"
+export HELM_DATA_HOME="${helm_home}/data"
+
+# Built-in kinds from the default catalog; Argo CD, External Secrets, Prometheus
+# and AWS CRDs from the datree CRDs catalog. No -ignore-missing-schemas: a
+# resource without a schema fails the run.
+# Narrow allow-list: no catalog publishes the schema of the
+# CustomResourceDefinition kind itself, so CRD objects are skipped. Their
+# content is checked by the Kubernetes API when Argo CD applies them.
+KUBECONFORM=(kubeconform -strict -summary -output text
+  -kubernetes-version "${KUBECONFORM_KUBE_VERSION:-$KUBE_VERSION}"
+  -skip CustomResourceDefinition
+  -schema-location default
+  -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json')
 
 # `helm dependency build` needs every chart repository registered first.
 grep -h '^ *repository:' charts/*/Chart.yaml | awk '{print $2}' | sort -u |
@@ -33,9 +49,10 @@ for chart in charts/*/; do
     helm dependency build "${chart}" >/dev/null
   fi
   helm lint "${chart}" "${values[@]}"
-  helm template "${name}" "${chart}" --namespace "${name}" \
+  # --include-crds: Argo CD renders the chart's crds/ directory too.
+  helm template "${name}" "${chart}" --namespace "${name}" --include-crds \
     --kube-version "${KUBE_VERSION}" "${values[@]}" \
-    | "${KUBECONFORM[@]}" -ignore-missing-schemas
+    | "${KUBECONFORM[@]}"
 done
 
 echo "==> appsets and bootstrap"
