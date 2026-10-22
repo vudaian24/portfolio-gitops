@@ -33,7 +33,7 @@ spec:
           releaseName: aws-load-balancer-controller
           parameters:
             - name: aws-load-balancer-controller.vpcId
-              value: '{{ if or (not (hasKey .metadata.annotations "portfolio/vpc-id")) (eq (index .metadata.annotations "portfolio/vpc-id") "") }}{{ fail "annotation portfolio/vpc-id is missing or empty on the in-cluster secret" }}{{ end }}{{ index .metadata.annotations "portfolio/vpc-id" }}'
+              value: '{{ $v := index .metadata.annotations "portfolio/vpc-id" }}{{ if not $v }}{{ fail "annotation portfolio/vpc-id is missing or empty on the in-cluster secret" }}{{ end }}{{ $v }}'
       destination:
         server: '{{ .server }}'
         namespace: kube-system

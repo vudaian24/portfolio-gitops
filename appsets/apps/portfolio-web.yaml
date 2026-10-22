@@ -36,7 +36,7 @@ spec:
             - values-prod.yaml
           parameters:
             - name: image.registry
-              value: '{{ if or (not (hasKey .metadata.annotations "portfolio/ecr-registry")) (eq (index .metadata.annotations "portfolio/ecr-registry") "") }}{{ fail "annotation portfolio/ecr-registry is missing or empty on the in-cluster secret" }}{{ end }}{{ index .metadata.annotations "portfolio/ecr-registry" }}'
+              value: '{{ $v := index .metadata.annotations "portfolio/ecr-registry" }}{{ if not $v }}{{ fail "annotation portfolio/ecr-registry is missing or empty on the in-cluster secret" }}{{ end }}{{ $v }}'
       destination:
         server: '{{ .server }}'
         namespace: portfolio-web
