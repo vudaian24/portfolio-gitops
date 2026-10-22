@@ -80,8 +80,14 @@ kube-prometheus-stack:
         memory: 48Mi
 
   grafana:
-    # No adminPassword: the Grafana chart generates one into the Secret
-    # kube-prometheus-stack-grafana.
+    # Admin login comes from the Secret `grafana-admin`, which
+    # templates/external-secret-grafana-admin.yaml builds from SSM. Without
+    # existingSecret, the chart generates a random password on every render
+    # and Argo CD would always show a diff.
+    admin:
+      existingSecret: grafana-admin
+      userKey: admin-user
+      passwordKey: admin-password
     persistence:
       enabled: false
     defaultDashboardsEnabled: true
@@ -104,3 +110,9 @@ kube-prometheus-stack:
         memory: 192Mi
       limits:
         memory: 384Mi
+
+# Grafana admin Secret, built from SSM by templates/external-secret-grafana-admin.yaml.
+grafanaAdmin:
+  clusterSecretStore: aws-parameter-store
+  refreshInterval: 1h
+  passwordParameter: /portfolio/prod/grafana-admin-password
