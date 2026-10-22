@@ -24,7 +24,7 @@ spec:
     metadata:
       name: kube-prometheus-stack
     spec:
-      project: default
+      project: portfolio
       source:
         repoURL: https://github.com/vudaian24/portfolio-gitops.git
         targetRevision: main
@@ -35,6 +35,10 @@ spec:
         server: '{{ .server }}'
         namespace: monitoring
       syncPolicy:
+        # node-exporter needs hostNetwork, hostPID and hostPath, which only privileged allows.
+        managedNamespaceMetadata:
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
         automated:
           prune: true
           selfHeal: true

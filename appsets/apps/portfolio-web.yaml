@@ -24,7 +24,7 @@ spec:
     metadata:
       name: portfolio-web
     spec:
-      project: default
+      project: portfolio
       source:
         repoURL: https://github.com/vudaian24/portfolio-gitops.git
         targetRevision: main
@@ -36,11 +36,14 @@ spec:
             - values-prod.yaml
           parameters:
             - name: image.registry
-              value: '{{ index .metadata.annotations "portfolio/ecr-registry" }}'
+              value: '{{ if or (not (hasKey .metadata.annotations "portfolio/ecr-registry")) (eq (index .metadata.annotations "portfolio/ecr-registry") "") }}{{ fail "annotation portfolio/ecr-registry is missing or empty on the in-cluster secret" }}{{ end }}{{ index .metadata.annotations "portfolio/ecr-registry" }}'
       destination:
         server: '{{ .server }}'
         namespace: portfolio-web
       syncPolicy:
+        managedNamespaceMetadata:
+          labels:
+            pod-security.kubernetes.io/enforce: restricted
         automated:
           prune: true
           selfHeal: true

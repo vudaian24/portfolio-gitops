@@ -24,7 +24,7 @@ spec:
     metadata:
       name: aws-load-balancer-controller
     spec:
-      project: default
+      project: portfolio
       source:
         repoURL: https://github.com/vudaian24/portfolio-gitops.git
         targetRevision: main
@@ -33,7 +33,7 @@ spec:
           releaseName: aws-load-balancer-controller
           parameters:
             - name: aws-load-balancer-controller.vpcId
-              value: '{{ index .metadata.annotations "portfolio/vpc-id" }}'
+              value: '{{ if or (not (hasKey .metadata.annotations "portfolio/vpc-id")) (eq (index .metadata.annotations "portfolio/vpc-id") "") }}{{ fail "annotation portfolio/vpc-id is missing or empty on the in-cluster secret" }}{{ end }}{{ index .metadata.annotations "portfolio/vpc-id" }}'
       destination:
         server: '{{ .server }}'
         namespace: kube-system
