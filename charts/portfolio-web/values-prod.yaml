@@ -1,5 +1,5 @@
 # Written by portfolio-web CI on every deploy. Holds only the image tag (the
-# git SHA). Empty until the bootstrap deploy of portfolio-web writes the first
-# tag in Phase 3; the chart refuses to render without it.
+# git SHA). On a new cluster it is empty until the bootstrap deploy of
+# portfolio-web writes the first tag; the chart refuses to render without it.
 image:
   tag: "8c14dcd0c031d2683bc1f394798fab037964447b"

@@ -4,10 +4,10 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 
 ## Current state
 
-- All charts, ApplicationSets and bootstrap manifests exist and were tested on a local kind cluster (Kubernetes 1.36). The EKS cluster exists since 2026-10-22 (Phase 2). Argo CD was bootstrapped on 2026-10-22 and syncs every add-on from `main`. `portfolio-web` runs since 2026-10-23 and serves production since the DNS cutover that day.
-- `charts/portfolio-web/values-prod.yaml` holds the live image tag. The `bootstrap` deploy of `portfolio-web` wrote the first one on 2026-10-23; the chart refuses to render with an empty tag, so never empty it.
+- Live: Argo CD runs on the EKS cluster and syncs every add-on and `portfolio-web` from `main`. `portfolio-web` serves production.
+- `charts/portfolio-web/values-prod.yaml` holds the live image tag, written by `portfolio-web` CI. The chart refuses to render with an empty tag, so never empty it.
 - ApplicationSets set `preserveResourcesOnDeletion: true` and add no finalizer to Applications, so deleting a file in `appsets/` removes the Application but leaves the workload running.
-- The target design is in the parent `docs/`. Follow the parent docs when they conflict.
+- The design is in the parent `docs/`. Follow the parent docs when they conflict.
 
 ## Layout
 
