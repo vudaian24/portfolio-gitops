@@ -2,7 +2,7 @@
 
 Kubernetes configuration for [portfolio-web](https://github.com/vudaian24/portfolio-web), deployed by Argo CD to one Amazon EKS cluster in `ap-southeast-1`.
 
-**Status:** Phase 2 done. The EKS cluster exists since 2026-10-22, but Argo CD is not bootstrapped yet, so nothing from this repo runs in it. Charts, ApplicationSets and bootstrap manifests were tested on a local kind cluster. `charts/portfolio-web/values-prod.yaml` has no image tag until the `bootstrap` deploy of `portfolio-web` in Phase 3.
+**Status:** live. Argo CD runs on the EKS cluster since 2026-10-22 and syncs every add-on from `main`. The `bootstrap` deploy of `portfolio-web` wrote the first image tag on 2026-10-23, and the site is served from the cluster since the DNS cutover that day. Charts, ApplicationSets and bootstrap manifests were first tested on a local kind cluster.
 
 | Chart | Upstream chart | Version |
 | --- | --- | --- |
