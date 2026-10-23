@@ -2,4 +2,4 @@
 # git SHA). Empty until the bootstrap deploy of portfolio-web writes the first
 # tag in Phase 3; the chart refuses to render without it.
 image:
-  tag: ""
+  tag: "fe5c5b1566f680ec65d89a6a8933c5facbbcfcfa"
