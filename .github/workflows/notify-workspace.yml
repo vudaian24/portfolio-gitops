@@ -1,0 +1,41 @@
+name: Notify workspace
+
+# After a push to main, asks the portfolio workspace repo to record this commit
+# (its sync-submodules.yml workflow bumps the submodule pointer). Skipped until
+# the repository variable WORKSPACE_SYNC_APP_CLIENT_ID is set. The workspace
+# also syncs on a schedule, so a missed dispatch only delays the bump.
+
+on:
+  push:
+    branches: [main]
+
+# The GitHub App token does the work; GITHUB_TOKEN needs no access.
+permissions: {}
+
+jobs:
+  dispatch:
+    name: Dispatch submodule-updated
+    if: vars.WORKSPACE_SYNC_APP_CLIENT_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create GitHub App token for portfolio
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.WORKSPACE_SYNC_APP_CLIENT_ID }}
+          private-key: ${{ secrets.WORKSPACE_SYNC_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: portfolio
+
+      - name: Send repository_dispatch to portfolio
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          SOURCE_REPO: ${{ github.event.repository.name }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          gh api --method POST "repos/${OWNER}/portfolio/dispatches" \
+            -f event_type=submodule-updated \
+            -f "client_payload[repository]=${SOURCE_REPO}" \
+            -f "client_payload[sha]=${SOURCE_SHA}"
