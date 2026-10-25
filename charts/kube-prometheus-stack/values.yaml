@@ -18,6 +18,11 @@ kube-prometheus-stack:
   # kube-proxy binds its metrics port to localhost on EKS.
   kubeProxy:
     enabled: false
+  # The API server histograms were about 73 % of all series (51k of 70k) and
+  # the biggest part of Prometheus memory. The EKS control plane is AWS's to
+  # run, so stop scraping it; this also drops the API server dashboard.
+  kubeApiServer:
+    enabled: false
 
   defaultRules:
     rules:
@@ -27,6 +32,11 @@ kube-prometheus-stack:
       kubeSchedulerAlerting: false
       kubeSchedulerRecording: false
       kubeProxy: false
+      # No API server metrics (kubeApiServer above).
+      kubeApiserverAvailability: false
+      kubeApiserverBurnrate: false
+      kubeApiserverHistogram: false
+      kubeApiserverSlos: false
 
   prometheus:
     prometheusSpec:
@@ -94,8 +104,16 @@ kube-prometheus-stack:
     sidecar:
       dashboards:
         enabled: true
-      # Applies to both sidecars (dashboards and datasources). 96Mi was
-      # OOM-killed in the kind test.
+      # Load the Prometheus datasource once from an init container instead of a
+      # sidecar that watches for changes and holds about 80Mi. LIST exits after
+      # one pass; Grafana is not up yet, so skip the reload call. A datasource
+      # change needs a Grafana restart.
+      datasources:
+        initDatasources: true
+        watchMethod: LIST
+        skipReload: true
+      # Applies to the dashboards sidecar and the datasources init container.
+      # 96Mi was OOM-killed in the kind test.
       resources:
         requests:
           cpu: 10m
