@@ -13,13 +13,15 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 ## Layout
 
 - `bootstrap/`: the `in-cluster` Argo CD cluster secret (labels only) and the root Application. Applied by hand once; not managed by Argo CD.
+- `appsets/portfolio-project.yaml`: the AppProject `portfolio` that every generated Application uses. The root Application applies it first (sync-wave -1).
+- `scripts/check.sh`: the same checks CI runs.
 - `appsets/platform/`: one ApplicationSet per add-on. `appsets/apps/`: the `portfolio-web` ApplicationSet. The root Application syncs `appsets/` recursively.
 - `charts/<add-on>/`: wrapper chart with the upstream chart as its only dependency, plus our own templates. `charts/portfolio-web/`: the app chart.
 
 ## Conventions
 
 - Wrapper charts: `apiVersion: v2`, one dependency with an exact version, `Chart.lock` committed. Downloaded archives (`charts/*/charts/`) are git-ignored.
-- Exception: an add-on whose upstream chart cannot meet these rules gets our own chart with no dependency and top-level values. `cloudflared` is one: Cloudflare's chart takes the tunnel token as a Helm value (parent `docs/adr/0010-cloudflared-chart-and-admin-ui-roles.md`).
+- Exception: an add-on whose upstream chart cannot meet these rules gets our own chart with no dependency and top-level values. `cloudflared` will be the first, because Cloudflare's chart takes the tunnel token as a Helm value (parent `docs/adr/0010-cloudflared-chart-and-admin-ui-roles.md`); it is not written yet, so every chart in `charts/` today has one upstream dependency except the app chart.
 - Values live in each chart's `values.yaml`, nested under the dependency name, with explicit CPU and memory requests and limits. Do not put Helm values in ApplicationSets; their only parameters come from cluster secret annotations.
 - Own templates: one resource per file, kind in the file name (`cluster-secret-store.yaml`), helpers in `_helpers.tpl` prefixed with the chart name.
 - Leave `replicas` out of the app Deployment; the HPA owns it.
@@ -31,7 +33,7 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 ## Commands
 
 - Check everything (same as CI): `./scripts/check.sh`. Needs `helm` and `kubeconform`.
-- Render one chart: `helm dependency build charts/<name> && helm template <name> charts/<name> -f charts/<name>/ci/test-values.yaml`
+- Render one chart: `helm dependency build charts/<name> && helm template <name> charts/<name>`. Add `-f charts/<name>/ci/test-values.yaml` only for charts that have one (`aws-load-balancer-controller` and `portfolio-web` today); `scripts/check.sh` applies the file when it exists.
 - Bump an upstream chart: change the version in `Chart.yaml`, run `helm dependency update charts/<name>`, commit `Chart.yaml` and `Chart.lock`.
 
 ## Never do

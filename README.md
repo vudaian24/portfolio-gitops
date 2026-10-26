@@ -20,6 +20,7 @@ This repository holds config, not source code, following the [Argo CD best pract
 bootstrap/                  Applied by hand once per cluster. Not managed by Argo CD.
                             The in-cluster Argo CD cluster secret (labels only) and the root Application.
 appsets/
+  portfolio-project.yaml    AppProject `portfolio`, applied first (sync-wave -1).
   platform/                 One ApplicationSet per add-on: Argo CD, AWS Load Balancer Controller,
                             External Secrets, kube-prometheus-stack.
   apps/                     ApplicationSet for portfolio-web.
@@ -28,9 +29,10 @@ charts/                     One chart per add-on, plus the app chart.
   aws-load-balancer-controller/
                             Wrapper chart: upstream aws-load-balancer-controller.
   external-secrets/         Wrapper chart: upstream external-secrets, plus the ClusterSecretStore.
-  kube-prometheus-stack/    Wrapper chart: upstream kube-prometheus-stack, plus Grafana dashboards.
+  kube-prometheus-stack/    Wrapper chart: upstream kube-prometheus-stack, plus the Grafana admin ExternalSecret.
   portfolio-web/            App chart: Deployment, Service, Ingress, HPA, ExternalSecret.
                             values-prod.yaml holds the image tag that portfolio-web CI updates.
+scripts/check.sh            The same checks CI runs.
 ```
 
 ## How it fits together
@@ -47,7 +49,7 @@ Argo CD syncs every push to `main`, and nothing reviews it first. Run the same c
 ./scripts/check.sh
 ```
 
-It runs `helm dependency build`, `helm lint`, and `helm template --include-crds` piped into `kubeconform` (Kubernetes 1.36) for every chart, with placeholder values from `charts/<name>/ci/test-values.yaml`, then schema-checks `appsets/` and `bootstrap/`. Helm uses its own config and cache in a temporary directory. A resource without a schema fails the run. The only exception is the CustomResourceDefinition kind, which no schema catalog publishes, so CRD objects are skipped.
+It runs `helm dependency build`, `helm lint`, and `helm template --include-crds` piped into `kubeconform` (Kubernetes 1.36) for every chart, with placeholder values from `charts/<name>/ci/test-values.yaml` where that file exists, then schema-checks `appsets/` and `bootstrap/`. Helm uses its own config and cache in a temporary directory. A resource without a schema fails the run. The only exception is the CustomResourceDefinition kind, which no schema catalog publishes, so CRD objects are skipped.
 
 ## Requirements
 
