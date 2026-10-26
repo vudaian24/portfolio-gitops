@@ -1,6 +1,6 @@
 # AGENTS.md — portfolio-gitops
 
-Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS cluster in `ap-southeast-1`. Public repo: github.com/vudaian24/portfolio-gitops. Migration design and cross-repo rules live in the parent `../docs/`; this file covers this repo only.
+Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS cluster in `ap-southeast-1`. Public repo: github.com/vudaian24/portfolio-gitops. Migration design and cross-repo rules live in the private `portfolio` workspace repository under `docs/`, which is not part of this clone; this file covers this repo only.
 
 ## Current state
 
