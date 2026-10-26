@@ -24,13 +24,23 @@ argo-cd:
   controller:
     replicas: 1
     # Caches every resource it manages, including the large Prometheus and
-    # External Secrets CRDs. 384Mi was OOM-killed in the kind test.
+    # External Secrets CRDs. 384Mi was OOM-killed in the kind test, and 768Mi
+    # was OOM-killed on EKS on 2026-10-25, 44 s after a kube-prometheus-stack
+    # sync. Steady use is about 415Mi, so the extra headroom is for sync peaks,
+    # not for idle (parent docs/adr/0011).
     resources:
       requests:
         cpu: 100m
         memory: 256Mi
       limits:
-        memory: 768Mi
+        memory: 1Gi
+    # Soft limit for the Go runtime at 90 % of the hard limit: approaching
+    # 922MiB the GC runs more often, which costs CPU instead of the kubelet
+    # killing the container. It does not help if the live heap really exceeds
+    # the limit.
+    env:
+      - name: GOMEMLIMIT
+        value: 922MiB
 
   repoServer:
     replicas: 1
