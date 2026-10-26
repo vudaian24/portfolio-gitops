@@ -19,6 +19,7 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 ## Conventions
 
 - Wrapper charts: `apiVersion: v2`, one dependency with an exact version, `Chart.lock` committed. Downloaded archives (`charts/*/charts/`) are git-ignored.
+- Exception: an add-on whose upstream chart cannot meet these rules gets our own chart with no dependency and top-level values. `cloudflared` is one: Cloudflare's chart takes the tunnel token as a Helm value (parent `docs/adr/0010-cloudflared-chart-and-admin-ui-roles.md`).
 - Values live in each chart's `values.yaml`, nested under the dependency name, with explicit CPU and memory requests and limits. Do not put Helm values in ApplicationSets; their only parameters come from cluster secret annotations.
 - Own templates: one resource per file, kind in the file name (`cluster-secret-store.yaml`), helpers in `_helpers.tpl` prefixed with the chart name.
 - Leave `replicas` out of the app Deployment; the HPA owns it.
