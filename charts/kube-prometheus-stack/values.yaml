@@ -1,6 +1,7 @@
 # Monitoring (ADR 0016): Prometheus keeps 3 days on an emptyDir, scrapes every
-# 60 s, no Alertmanager. Grafana has no volume; dashboards come from ConfigMaps.
-# Both are reached with `kubectl port-forward`.
+# 60 s, no Alertmanager, and pushes the dashboards' metrics to Grafana Cloud.
+# Grafana has no volume; dashboards come from ConfigMaps. Both are reached with
+# `kubectl port-forward`.
 kube-prometheus-stack:
   crds:
     enabled: true
@@ -57,6 +58,101 @@ kube-prometheus-stack:
         limits:
           memory: 512Mi
           ephemeral-storage: 3Gi
+      # Grafana Cloud (ADR 0016): push only the metrics the dashboards use, about
+      # 2,300 series against the free tier's 10,000. A new dashboard needs its
+      # metrics added to the keep list. The cluster label fills the dashboards'
+      # cluster variable in Grafana Cloud; local queries do not see it.
+      externalLabels:
+        cluster: portfolio-prod
+      remoteWrite:
+        - name: grafana-cloud
+          url: https://prometheus-prod-37-prod-ap-southeast-1.grafana.net/api/prom/push
+          # Secret from templates/external-secret-grafana-cloud.yaml.
+          basicAuth:
+            username:
+              name: grafana-cloud-metrics
+              key: username
+            password:
+              name: grafana-cloud-metrics
+              key: password
+          writeRelabelConfigs:
+            - sourceLabels: [__name__]
+              action: keep
+              regex: ":node_memory_MemAvailable_bytes:sum|\
+                cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests|\
+                cluster:namespace:pod_memory:active:kube_pod_container_resource_limits|\
+                cluster:namespace:pod_memory:active:kube_pod_container_resource_requests|\
+                cluster:node_cpu:ratio_rate5m|\
+                container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|\
+                container_fs_writes_total|container_memory_cache|container_memory_rss|\
+                container_memory_working_set_bytes|container_network_receive_bytes_total|\
+                container_network_receive_packets_dropped_total|container_network_receive_packets_total|\
+                container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|\
+                container_network_transmit_packets_total|\
+                coredns_cache_entries|coredns_cache_hits_total|coredns_cache_misses_total|\
+                coredns_dns_request_duration_seconds_bucket|coredns_dns_request_size_bytes_bucket|\
+                coredns_dns_requests_total|coredns_dns_response_size_bytes_bucket|\
+                coredns_dns_responses_total|\
+                go_goroutines|\
+                instance:node_cpu_utilisation:rate5m|instance:node_load1_per_cpu:ratio|\
+                instance:node_memory_utilisation:ratio|\
+                instance:node_network_receive_bytes_excluding_lo:rate5m|\
+                instance:node_network_receive_bytes_physical:rate5m|\
+                instance:node_network_receive_drop_excluding_lo:rate5m|\
+                instance:node_network_receive_drop_physical:rate5m|\
+                instance:node_network_transmit_bytes_excluding_lo:rate5m|\
+                instance:node_network_transmit_bytes_physical:rate5m|\
+                instance:node_network_transmit_drop_excluding_lo:rate5m|\
+                instance:node_network_transmit_drop_physical:rate5m|instance:node_num_cpu:sum|\
+                instance:node_vmstat_pgmajfault:rate5m|\
+                instance_device:node_disk_io_time_seconds:rate5m|\
+                instance_device:node_disk_io_time_weighted_seconds:rate5m|\
+                kube_namespace_status_phase|kube_node_info|kube_node_status_allocatable|\
+                kube_node_status_capacity|kube_pod_container_resource_limits|\
+                kube_pod_container_resource_requests|kube_pod_info|kube_pod_owner|\
+                kubelet_cgroup_manager_duration_seconds_bucket|\
+                kubelet_cgroup_manager_duration_seconds_count|kubelet_node_name|\
+                kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|\
+                kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|\
+                kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|\
+                kubelet_pod_worker_duration_seconds_count|kubelet_running_containers|\
+                kubelet_running_pods|kubelet_runtime_operations_duration_seconds_bucket|\
+                kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|\
+                namespace_cpu:kube_pod_container_resource_requests:sum|\
+                namespace_memory:kube_pod_container_resource_limits:sum|\
+                namespace_memory:kube_pod_container_resource_requests:sum|\
+                namespace_workload_pod:kube_pod_owner:relabel|\
+                node_cpu_seconds_total|node_disk_io_time_seconds_total|node_disk_read_bytes_total|\
+                node_disk_written_bytes_total|node_exporter_build_info|node_filesystem_avail_bytes|\
+                node_filesystem_size_bytes|node_load1|node_load15|node_load5|node_memory_Buffers_bytes|\
+                node_memory_Cached_bytes|node_memory_MemAvailable_bytes|node_memory_MemFree_bytes|\
+                node_memory_MemTotal_bytes|\
+                node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m|\
+                node_namespace_pod_container:container_memory_cache|\
+                node_namespace_pod_container:container_memory_rss|\
+                node_namespace_pod_container:container_memory_working_set_bytes|\
+                node_netstat_TcpExt_TCPSynRetrans|node_netstat_Tcp_OutSegs|node_netstat_Tcp_RetransSegs|\
+                node_network_receive_bytes_total|node_network_transmit_bytes_total|node_time_seconds|\
+                node_uname_info|\
+                process_cpu_seconds_total|process_resident_memory_bytes|process_start_time_seconds|\
+                prometheus_build_info|prometheus_engine_query_duration_seconds|\
+                prometheus_engine_query_duration_seconds_count|prometheus_sd_discovered_targets|\
+                prometheus_target_interval_length_seconds_count|\
+                prometheus_target_interval_length_seconds_sum|\
+                prometheus_target_scrapes_exceeded_body_size_limit_total|\
+                prometheus_target_scrapes_exceeded_sample_limit_total|\
+                prometheus_target_scrapes_sample_duplicate_timestamp_total|\
+                prometheus_target_scrapes_sample_out_of_bounds_total|\
+                prometheus_target_scrapes_sample_out_of_order_total|\
+                prometheus_target_sync_length_seconds_sum|prometheus_tsdb_head_chunks|\
+                prometheus_tsdb_head_samples_appended_total|prometheus_tsdb_head_series|\
+                rest_client_request_duration_seconds_bucket|rest_client_requests_total|\
+                storage_operation_duration_seconds_bucket|storage_operation_duration_seconds_count|\
+                up|\
+                volume_manager_total_volumes"
+          # About 40 samples a second: one shard is enough, four caps the memory.
+          queueConfig:
+            maxShards: 4
 
   prometheusOperator:
     resources:
@@ -142,3 +238,12 @@ grafanaAdmin:
   clusterSecretStore: aws-parameter-store
   refreshInterval: 1h
   passwordParameter: /portfolio/prod/grafana-admin-password
+
+# Grafana Cloud remote write credentials, built from SSM by
+# templates/external-secret-grafana-cloud.yaml: the metrics instance ID and an
+# access policy token with metrics:write only.
+grafanaCloud:
+  clusterSecretStore: aws-parameter-store
+  refreshInterval: 1h
+  userParameter: /portfolio/prod/grafana-cloud-metrics-user
+  tokenParameter: /portfolio/prod/grafana-cloud-metrics-token
