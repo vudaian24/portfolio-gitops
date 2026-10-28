@@ -29,7 +29,7 @@ charts/                     One chart per add-on, plus the app chart.
   aws-load-balancer-controller/
                             Wrapper chart: upstream aws-load-balancer-controller.
   external-secrets/         Wrapper chart: upstream external-secrets, plus the ClusterSecretStore.
-  kube-prometheus-stack/    Wrapper chart: upstream kube-prometheus-stack, plus the Grafana admin and Grafana Cloud ExternalSecrets.
+  kube-prometheus-stack/    Wrapper chart: upstream kube-prometheus-stack, plus the Grafana Cloud remote write ExternalSecret. No Grafana in the cluster.
   portfolio-web/            App chart: Deployment, Service, Ingress, HPA, ExternalSecret.
                             values-prod.yaml holds the image tag that portfolio-web CI updates.
 scripts/check.sh            The same checks CI runs.

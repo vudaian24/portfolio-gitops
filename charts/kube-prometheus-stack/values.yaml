@@ -1,6 +1,6 @@
 # Monitoring (ADR 0016): Prometheus keeps 3 days on an emptyDir, scrapes every
-# 60 s, no Alertmanager, and pushes the dashboards' metrics to Grafana Cloud.
-# Grafana has no volume; dashboards come from ConfigMaps. Both are reached with
+# 60 s, has no Alertmanager, and pushes the dashboards' metrics to Grafana
+# Cloud, where the dashboards are. Prometheus itself is reached with
 # `kubectl port-forward`.
 kube-prometheus-stack:
   crds:
@@ -185,59 +185,10 @@ kube-prometheus-stack:
       limits:
         memory: 48Mi
 
+  # Dashboards live in Grafana Cloud (ADR 0016); the cluster runs no Grafana.
+  # This also drops the dashboard ConfigMaps and the Grafana ServiceMonitor.
   grafana:
-    # Admin login comes from the Secret `grafana-admin`, which
-    # templates/external-secret-grafana-admin.yaml builds from SSM. Without
-    # existingSecret, the chart generates a random password on every render
-    # and Argo CD would always show a diff.
-    admin:
-      existingSecret: grafana-admin
-      userKey: admin-user
-      passwordKey: admin-password
-    persistence:
-      enabled: false
-    defaultDashboardsEnabled: true
-    sidecar:
-      dashboards:
-        enabled: true
-      # Load the Prometheus datasource once from an init container instead of a
-      # sidecar that watches for changes and holds about 80Mi. LIST exits after
-      # one pass; Grafana is not up yet, so skip the reload call. A datasource
-      # change needs a Grafana restart.
-      datasources:
-        initDatasources: true
-        watchMethod: LIST
-        skipReload: true
-      # Applies to the dashboards sidecar and the datasources init container.
-      # 96Mi was OOM-killed in the kind test.
-      resources:
-        requests:
-          cpu: 10m
-          memory: 64Mi
-        limits:
-          memory: 160Mi
-    # Grafana 12 needs about 200Mi just to start; 192Mi was OOM-killed in the
-    # kind test.
-    resources:
-      requests:
-        cpu: 20m
-        memory: 192Mi
-      limits:
-        memory: 384Mi
-    # Up to 5 minutes to start before liveness applies. In the kind re-test
-    # the liveness probe restarted Grafana once during a CPU-heavy start.
-    startupProbe:
-      httpGet:
-        path: /api/health
-        port: grafana
-      periodSeconds: 10
-      failureThreshold: 30
-
-# Grafana admin Secret, built from SSM by templates/external-secret-grafana-admin.yaml.
-grafanaAdmin:
-  clusterSecretStore: aws-parameter-store
-  refreshInterval: 1h
-  passwordParameter: /portfolio/prod/grafana-admin-password
+    enabled: false
 
 # Grafana Cloud remote write credentials, built from SSM by
 # templates/external-secret-grafana-cloud.yaml: the metrics instance ID and an

@@ -1,4 +1,4 @@
-# Prometheus, Grafana and exporters.
+# Prometheus and exporters; dashboards are in Grafana Cloud.
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:

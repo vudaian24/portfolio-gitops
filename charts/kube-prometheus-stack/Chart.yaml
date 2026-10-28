@@ -1,6 +1,6 @@
 apiVersion: v2
 name: kube-prometheus-stack
-description: Prometheus, Grafana and exporters for the portfolio cluster. Wraps the upstream kube-prometheus-stack chart.
+description: Prometheus and exporters for the portfolio cluster, with dashboards in Grafana Cloud. Wraps the upstream kube-prometheus-stack chart.
 type: application
 version: 0.1.0
 dependencies:
