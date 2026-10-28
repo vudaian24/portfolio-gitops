@@ -25,6 +25,14 @@ kube-prometheus-stack:
   kubeApiServer:
     enabled: false
 
+  # cAdvisor (the container_* metrics) is scraped every 10 s upstream, six times
+  # the 60 s used everywhere else. It tripled the samples pushed to Grafana Cloud
+  # (about 116 a second for 2,356 series); 60 s matches the dashboards' 5-minute
+  # rate windows.
+  kubelet:
+    serviceMonitor:
+      cAdvisorInterval: 60s
+
   defaultRules:
     rules:
       alertmanager: false
