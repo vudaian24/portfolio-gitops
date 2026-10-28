@@ -1,4 +1,4 @@
-# AWS Load Balancer Controller (ADR 0005). It creates the ALB for the
+# AWS Load Balancer Controller (ADR 0014). It creates the ALB for the
 # portfolio-web Ingress. Credentials come from EKS Pod Identity, bound to the
 # service account below by Terraform.
 aws-load-balancer-controller:

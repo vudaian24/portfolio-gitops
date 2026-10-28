@@ -1,4 +1,4 @@
-# External Secrets Operator (ADR 0005). Reads SSM Parameter Store with EKS
+# External Secrets Operator (ADR 0015). Reads SSM Parameter Store with EKS
 # Pod Identity; Terraform grants ssm:GetParameter on /portfolio/prod/*.
 external-secrets:
   installCRDs: true

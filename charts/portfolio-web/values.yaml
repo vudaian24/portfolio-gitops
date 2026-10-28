@@ -1,4 +1,4 @@
-# App chart for portfolio-web (ADR 0007). The image tag lives in
+# App chart for portfolio-web (ADR 0006, ADR 0008). The image tag lives in
 # values-prod.yaml and is written only by portfolio-web CI.
 image:
   # ECR registry host. Set by the ApplicationSet from the `portfolio/ecr-registry`
@@ -33,7 +33,7 @@ ingress:
   enabled: true
   className: alb
   # Fixed name, so Terraform can find the ALB and point the Cloudflare
-  # records at it (ADR 0004).
+  # records at it (ADR 0014).
   loadBalancerName: portfolio-prod-web
   # Security group from Terraform: TCP 443 from Cloudflare IP ranges only.
   securityGroup: portfolio-prod-web

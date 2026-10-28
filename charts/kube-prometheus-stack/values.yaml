@@ -1,4 +1,4 @@
-# Monitoring (ADR 0005): Prometheus keeps 3 days on an emptyDir, scrapes every
+# Monitoring (ADR 0016): Prometheus keeps 3 days on an emptyDir, scrapes every
 # 60 s, no Alertmanager. Grafana has no volume; dashboards come from ConfigMaps.
 # Both are reached with `kubectl port-forward`.
 kube-prometheus-stack:
