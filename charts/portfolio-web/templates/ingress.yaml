@@ -7,16 +7,16 @@ metadata:
   labels:
     {{- include "portfolio-web.labels" . | nindent 4 }}
   annotations:
-    alb.ingress.kubernetes.io/load-balancer-name: {{ .Values.ingress.loadBalancerName }}
+    alb.ingress.kubernetes.io/load-balancer-name: {{ .Values.ingress.loadBalancerName | quote }}
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     # HTTPS only. Cloudflare connects on 443 with SSL mode Full (strict).
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/ssl-policy: {{ .Values.ingress.sslPolicy }}
+    alb.ingress.kubernetes.io/ssl-policy: {{ .Values.ingress.sslPolicy | quote }}
     # Use the Terraform security group (443 from Cloudflare only) instead of
     # one that allows the whole internet, and let the controller open the
     # path from the ALB to the pods.
-    alb.ingress.kubernetes.io/security-groups: {{ .Values.ingress.securityGroup }}
+    alb.ingress.kubernetes.io/security-groups: {{ .Values.ingress.securityGroup | quote }}
     alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
     alb.ingress.kubernetes.io/healthcheck-path: /web-api/health
     alb.ingress.kubernetes.io/success-codes: "200"
