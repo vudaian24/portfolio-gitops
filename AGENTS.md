@@ -7,7 +7,7 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 - Live: Argo CD runs on the EKS cluster and syncs every add-on and `portfolio-web` from `main`. `portfolio-web` serves production.
 - `charts/portfolio-web/values-prod.yaml` holds the live image tag, written by `portfolio-web` CI. The chart refuses to render with an empty tag, so never empty it.
 - ApplicationSets set `preserveResourcesOnDeletion: true` and add no finalizer to Applications, so deleting a file in `appsets/` removes the Application but leaves the workload running.
-- `.github/workflows/notify-workspace.yml`: on push to `main`, sends `repository_dispatch` (`submodule-updated`) to the private workspace repo `portfolio`, which then bumps its submodule pointer. Uses a GitHub App token (repository variable `WORKSPACE_SYNC_APP_CLIENT_ID`, repository secret `WORKSPACE_SYNC_APP_PRIVATE_KEY`); skipped while the variable is unset.
+- `.github/workflows/notify-workspace.yml`: on push to `main`, sends `repository_dispatch` (`submodule-updated`) to the private workspace repo `portfolio`, which then bumps its submodule pointer. Uses a GitHub App token (repository variable `WORKSPACE_SYNC_APP_CLIENT_ID`, repository secret `WORKSPACE_SYNC_APP_PRIVATE_KEY`, both set); the token is limited to Contents write. Do not push with `[skip ci]`, which also skips this dispatch.
 - The design is in the parent `docs/`. Follow the parent docs when they conflict.
 
 ## Layout
