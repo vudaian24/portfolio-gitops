@@ -20,6 +20,9 @@ metadata:
     alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
     alb.ingress.kubernetes.io/healthcheck-path: /web-api/health
     alb.ingress.kubernetes.io/success-codes: "200"
+    # Default 300 s. A pod lives 45 s after deletion (terminationGracePeriodSeconds),
+    # so draining longer only delays the end of a rollout.
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   tls:

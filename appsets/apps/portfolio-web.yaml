@@ -44,6 +44,12 @@ spec:
         managedNamespaceMetadata:
           labels:
             pod-security.kubernetes.io/enforce: restricted
+            # The AWS Load Balancer Controller adds a readiness gate to new pods
+            # here: a pod is Ready only once its ALB target is healthy, so a
+            # rolling update keeps the old pod until the ALB can reach the new one.
+            # Under /spec/syncPolicy, which ignoreApplicationDifferences skips: a
+            # change here reaches an existing Application only by a patch on it.
+            elbv2.k8s.aws/pod-readiness-gate-inject: enabled
         automated:
           prune: true
           selfHeal: true

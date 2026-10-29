@@ -22,6 +22,8 @@ spec:
         {{- include "portfolio-web.selectorLabels" . | nindent 8 }}
     spec:
       automountServiceAccountToken: false
+      # preStop sleep (15 s) plus time for Next.js to finish in-flight requests.
+      terminationGracePeriodSeconds: 45
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
@@ -63,6 +65,13 @@ spec:
             failureThreshold: 3
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          lifecycle:
+            # SIGTERM and the ALB deregistration start at the same time, and the
+            # deregistration takes longer. Keep serving for 15 s so the ALB stops
+            # sending requests before the server shuts down.
+            preStop:
+              sleep:
+                seconds: 15
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
