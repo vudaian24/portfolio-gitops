@@ -27,6 +27,8 @@ jobs:
           private-key: ${{ secrets.WORKSPACE_SYNC_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: portfolio
+          # repository_dispatch needs Contents write and nothing else.
+          permission-contents: write
 
       - name: Send repository_dispatch to portfolio
         env:
