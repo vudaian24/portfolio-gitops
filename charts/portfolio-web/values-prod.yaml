@@ -2,4 +2,4 @@
 # git SHA). On a new cluster it is empty until the bootstrap deploy of
 # portfolio-web writes the first tag; the chart refuses to render without it.
 image:
-  tag: "9b4772e156c4bb950de1fe6018e871d171e6a060"
+  tag: "55168bfcbe482f57bcbd204960d22236752843e8"
