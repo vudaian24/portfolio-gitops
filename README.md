@@ -41,9 +41,9 @@ scripts/check.sh            The same checks CI runs.
 2. Argo CD polls this repository and syncs the change.
 3. Values that come from Terraform and identify the AWS account (ECR registry host, VPC ID) are never committed. They are annotations on the `in-cluster` Argo CD cluster secret, and the ApplicationSets pass them to the charts as Helm parameters.
 
-## Check before pushing
+## Check before opening a pull request
 
-Argo CD syncs every push to `main`, and nothing reviews it first. Run the same checks as CI:
+Argo CD syncs every merge to `main`, so a broken chart is live within minutes. `main` takes changes through pull requests only, and `k8s-ci.yml` checks each one. Run the same checks locally first:
 
 ```sh
 ./scripts/check.sh

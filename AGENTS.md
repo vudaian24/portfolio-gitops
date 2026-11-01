@@ -42,4 +42,4 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 - Never run `kubectl apply`, `helm install` or `argocd app sync` against the EKS cluster. A local kind or k3d cluster is fine.
 - Deleting a file in `appsets/` removes that Application as soon as it is pushed. The workload keeps running unmanaged. Confirm with the user first and say so in the commit message.
 - This repo is also checked out as a submodule of the `portfolio` workspace repo. Push changes here first; the workspace records the new commit afterwards.
-- Commit on `main` and push it directly; there are no pull requests. Argo CD syncs every push, so render each changed chart with `helm template` before pushing.
+- Change `main` through a pull request: the ruleset `protect main` rejects direct pushes and force-pushes (ADR 0019 in the workspace repo). Only the `portfolio-gitops-writer` GitHub App, which the `portfolio-web` release pipeline uses for `image.tag`, pushes to `main` directly. `k8s-ci.yml` checks every pull request, but Argo CD syncs each merge within minutes, so still render each changed chart with `./scripts/check.sh` before opening it.

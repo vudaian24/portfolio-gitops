@@ -1,10 +1,12 @@
 name: K8s CI
 
 # Lints, renders and schema-checks every chart and the Argo CD manifests.
-# No cluster and no AWS credentials. Pushes go straight to main and Argo CD
-# syncs them, so this reports problems after the fact; run
-# scripts/check.sh locally before pushing.
+# No cluster and no AWS credentials. Runs on pull requests, so a broken chart
+# shows up before the merge that Argo CD syncs; run scripts/check.sh locally
+# first. It also runs on pushes to main (the release pipeline's image tag).
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
