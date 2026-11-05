@@ -1,0 +1,40 @@
+# Dependabot version updates. Argo CD syncs every merge to main within
+# minutes, so each add-on chart gets its own pull request: run
+# ./scripts/check.sh and read the upstream changelog before merging.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Ho_Chi_Minh
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # Wrapper charts only. charts/portfolio-web is left out on purpose: its
+  # image tag is written by the portfolio-web release pipeline and nothing
+  # else may change it.
+  - package-ecosystem: helm
+    directories:
+      - /charts/argocd
+      - /charts/aws-load-balancer-controller
+      - /charts/external-secrets
+      - /charts/kube-prometheus-stack
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Ho_Chi_Minh
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
