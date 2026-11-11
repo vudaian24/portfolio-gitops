@@ -6,10 +6,10 @@ Kubernetes configuration for [portfolio-web](https://github.com/vudaian24/portfo
 
 | Chart | Upstream chart | Version |
 | --- | --- | --- |
-| `argocd` | `argo-cd` (Argo CD v3.5.5) | 10.10.5 |
+| `argocd` | `argo-cd` (Argo CD v3.6.1) | 10.17.0 |
 | `aws-load-balancer-controller` | `aws-load-balancer-controller` | 3.6.1 |
-| `external-secrets` | `external-secrets` | 2.13.0 |
-| `kube-prometheus-stack` | `kube-prometheus-stack` | 92.11.0 |
+| `external-secrets` | `external-secrets` | 2.15.0 |
+| `kube-prometheus-stack` | `kube-prometheus-stack` | 93.1.2 |
 | `portfolio-web` | none (app chart) | 0.1.0 |
 
 This repository holds config, not source code, following the [Argo CD best practice](https://argo-cd.readthedocs.io/en/stable/user-guide/best_practices/) of keeping manifests in their own repository. The app code and its image build live in `portfolio-web`. AWS and Cloudflare resources live in `portfolio-infra` (Terraform). Design records live in the private workspace repo.

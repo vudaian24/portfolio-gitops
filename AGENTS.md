@@ -35,7 +35,7 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 
 - Check everything (same as CI): `./scripts/check.sh`. Needs `helm` and `kubeconform`.
 - Render one chart: `helm dependency build charts/<name> && helm template <name> charts/<name>`. Add `-f charts/<name>/ci/test-values.yaml` only for charts that have one (`aws-load-balancer-controller` and `portfolio-web` today); `scripts/check.sh` applies the file when it exists. It then renders `portfolio-web` a second time with the committed `values-prod.yaml`, so a bad `image.tag` from the release pipeline fails CI; an empty tag (a new cluster before the first deploy) is skipped.
-- Bump an upstream chart: change the version in `Chart.yaml`, run `helm dependency update charts/<name>`, commit `Chart.yaml` and `Chart.lock`.
+- Bump an upstream chart: change the version in `Chart.yaml`, run `helm dependency update charts/<name>`, commit `Chart.yaml` and `Chart.lock`. Update the version table in `README.md` in the same change. The node is arm64 and CI does not pull images, so check that every new image tag publishes a `linux/arm64` manifest (`docker manifest inspect <image>:<tag>`) before merging: kube-prometheus-stack 93.1.0 shipped prometheus-operator v0.95.1, which was amd64 only, and its pod stayed in `ImagePullBackOff`.
 
 ## Never do
 
