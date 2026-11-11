@@ -41,3 +41,8 @@ external-secrets:
 clusterSecretStore:
   name: aws-parameter-store
   region: ap-southeast-1
+  # Namespaces whose ExternalSecrets may read through the store. Add a
+  # namespace here before a chart in it gets an ExternalSecret.
+  namespaces:
+    - portfolio-web
+    - monitoring

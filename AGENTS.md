@@ -22,7 +22,8 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 
 - Wrapper charts: `apiVersion: v2`, one dependency with an exact version, `Chart.lock` committed. Downloaded archives (`charts/*/charts/`) are git-ignored.
 - Exception: an add-on whose upstream chart cannot meet these rules gets our own chart with no dependency and top-level values. `cloudflared` will be the first, because Cloudflare's chart takes the tunnel token as a Helm value (parent `docs/adr/0006-helm-chart-and-applicationset-rules.md`); it is not written yet, so every chart in `charts/` today has one upstream dependency except the app chart.
-- Values live in each chart's `values.yaml`, nested under the dependency name, with explicit CPU and memory requests and limits. Do not put Helm values in ApplicationSets; their only parameters come from cluster secret annotations.
+- Values live in each chart's `values.yaml`, nested under the dependency name, with explicit CPU and memory requests and limits for every long-running workload. The short-lived Jobs of the upstream charts (the kube-prometheus-stack admission Jobs and `argocd-redis-secret-init`) run without them. Do not put Helm values in ApplicationSets; their only parameters come from cluster secret annotations.
+- A chart that adds an `ExternalSecret` in a new namespace also needs that namespace in `clusterSecretStore.namespaces` (`charts/external-secrets/values.yaml`); the store refuses ExternalSecrets from any other namespace.
 - Own templates: one resource per file, kind in the file name (`cluster-secret-store.yaml`), helpers in `_helpers.tpl` prefixed with the chart name.
 - Leave `replicas` out of the app Deployment; the HPA owns it.
 - ApplicationSets: cluster generator matching only the `in-cluster` secret, `goTemplate: true` with `missingkey=error`, automated sync with prune and self-heal, retry with backoff, `CreateNamespace=true`.
@@ -33,7 +34,7 @@ Kubernetes configuration for the portfolio, deployed by Argo CD to one EKS clust
 ## Commands
 
 - Check everything (same as CI): `./scripts/check.sh`. Needs `helm` and `kubeconform`.
-- Render one chart: `helm dependency build charts/<name> && helm template <name> charts/<name>`. Add `-f charts/<name>/ci/test-values.yaml` only for charts that have one (`aws-load-balancer-controller` and `portfolio-web` today); `scripts/check.sh` applies the file when it exists.
+- Render one chart: `helm dependency build charts/<name> && helm template <name> charts/<name>`. Add `-f charts/<name>/ci/test-values.yaml` only for charts that have one (`aws-load-balancer-controller` and `portfolio-web` today); `scripts/check.sh` applies the file when it exists. It then renders `portfolio-web` a second time with the committed `values-prod.yaml`, so a bad `image.tag` from the release pipeline fails CI; an empty tag (a new cluster before the first deploy) is skipped.
 - Bump an upstream chart: change the version in `Chart.yaml`, run `helm dependency update charts/<name>`, commit `Chart.yaml` and `Chart.lock`.
 
 ## Never do

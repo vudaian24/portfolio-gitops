@@ -28,7 +28,7 @@ charts/                     One chart per add-on, plus the app chart.
   argocd/                   Wrapper chart: upstream argo-cd.
   aws-load-balancer-controller/
                             Wrapper chart: upstream aws-load-balancer-controller.
-  external-secrets/         Wrapper chart: upstream external-secrets, plus the ClusterSecretStore.
+  external-secrets/         Wrapper chart: upstream external-secrets, plus the ClusterSecretStore (open to the namespaces listed in its values).
   kube-prometheus-stack/    Wrapper chart: upstream kube-prometheus-stack, plus the Grafana Cloud remote write ExternalSecret. No Grafana in the cluster.
   portfolio-web/            App chart: Deployment, Service, Ingress, HPA, ExternalSecret.
                             values-prod.yaml holds the image tag that portfolio-web CI updates.
@@ -49,7 +49,7 @@ Argo CD syncs every merge to `main`, so a broken chart is live within minutes. `
 ./scripts/check.sh
 ```
 
-It runs `helm dependency build`, `helm lint`, and `helm template --include-crds` piped into `kubeconform` (Kubernetes 1.36) for every chart, with placeholder values from `charts/<name>/ci/test-values.yaml` where that file exists, then schema-checks `appsets/` and `bootstrap/`. Helm uses its own config and cache in a temporary directory. A resource without a schema fails the run. The only exception is the CustomResourceDefinition kind, which no schema catalog publishes, so CRD objects are skipped.
+It runs `helm dependency build`, `helm lint`, and `helm template --include-crds` piped into `kubeconform` (Kubernetes 1.36) for every chart, with placeholder values from `charts/<name>/ci/test-values.yaml` where that file exists, renders `portfolio-web` once more with the committed image tag from `values-prod.yaml`, then schema-checks `appsets/` and `bootstrap/`. CRD schemas come from a pinned commit of the datree CRDs catalog (`CRDS_CATALOG_REF` in the script). Helm uses its own config and cache in a temporary directory. A resource without a schema fails the run. The only exception is the CustomResourceDefinition kind, which no schema catalog publishes, so CRD objects are skipped.
 
 ## Requirements
 
